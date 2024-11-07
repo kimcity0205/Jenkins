@@ -1,5 +1,5 @@
 pipeline {
-    agent none  // 전체 파이프라인에서 사용할 에이전트는 지정하지 않음
+    agent any  // 전체 파이프라인에서 사용할 에이전트는 지정하지 않음
 
     environment {
         GITHUB_REPO = 'https://github.com/kimcity0205/Jenkins.git'
@@ -11,7 +11,7 @@ pipeline {
 
     stages {
         stage('Clone GitHub Repo') {
-            agent any  // Git 클론은 어떤 에이전트에서든 가능
+            agent any
             steps {
                 script {
                     // GitHub에서 리포지토리 클론
@@ -20,10 +20,44 @@ pipeline {
             }
         }
 
-        stage('Deploy Report Pod') {
-            agent any  // 이 스테이지는 어떤 에이전트에서든 실행 가능
+        stage('Install kubectl and Ansible') {
+            agent any
             steps {
                 script {
+                    // kubectl 설치
+                    sh '''
+                    if ! command -v kubectl &> /dev/null
+                    then
+                        echo "kubectl not found, installing..."
+                        curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kubectl
+                        chmod +x kubectl
+                        mv kubectl /usr/local/bin/
+                    else
+                        echo "kubectl already installed"
+                    fi
+                    '''
+
+                    // Ansible 설치
+                    sh '''
+                    if ! command -v ansible &> /dev/null
+                    then
+                        echo "Ansible not found, installing..."
+                        sudo apt update
+                        sudo apt install -y ansible
+                    else
+                        echo "Ansible already installed"
+                    fi
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy Report Pod') {
+            agent any
+            steps {
+                script {
+                    // kubectl이 올바르게 설치되어 있는지 확인
+                    sh 'kubectl version --client'  // kubectl 버전 확인
                     // report_pod.yml을 Kubernetes 클러스터에 배포
                     sh """
                     kubectl apply -f ${REPORT_POD_SRC}
@@ -33,9 +67,11 @@ pipeline {
         }
 
         stage('Run Ansible Playbook') {
-            agent any  // 이 스테이지는 어떤 에이전트에서든 실행 가능
+            agent any
             steps {
                 script {
+                    // Ansible이 설치되어 있는지 확인
+                    sh 'ansible --version'  // Ansible 버전 확인
                     // Ansible Playbook을 실행합니다.
                     echo "Running Ansible Playbook"
                     sh """
