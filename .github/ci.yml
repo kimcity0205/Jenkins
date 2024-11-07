@@ -1,0 +1,17 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Trigger Jenkins Job via ngrok URL
+        run: |
+          curl -X POST "http://<ngrok-subdomain>.ngrok.io/job/report/build?token=2oW6AEqu2sm6vK9UwKrhWPDJWNA_5Mh2M6YxgcYLcRMapNdN6"

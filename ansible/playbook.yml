@@ -1,0 +1,20 @@
+---
+- name: Run tasks on all nodes
+  hosts: all
+  user: user1  # 현재 사용자로 실행하도록 설정
+  tasks:
+    - name: Install package
+      yum:
+        name: httpd
+        state: present
+
+    - name: Start the HTTPD service
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+
+    - name: Copy a file to the node
+      copy:
+        src: "{{WORKSPACE}}/playbook.yml"
+        dest: "/home/user1/jenkins/ansible/playbook.yml"
