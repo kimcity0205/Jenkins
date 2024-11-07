@@ -2,7 +2,7 @@ pipeline {
     agent none  // 전체 파이프라인에서 사용할 에이전트는 지정하지 않음
 
     environment {
-        GITHUB_REPO = 'https://github.com/your-username/your-repository.git'
+        GITHUB_REPO = 'https://github.com/kimcity0205/Jenkins.git'
         PLAYBOOK_PATH = '/home/user1/jenkins/ansible/playbook.yml'
         REPORT_POD_PATH = '/home/user1/jenkins/ansible/report_pod.yml'
         PLAYBOOK_SRC = "${WORKSPACE}/ansible/playbook.yml"  // Jenkins Workspace 내에서 Playbook 경로 설정
@@ -20,78 +20,24 @@ pipeline {
             }
         }
 
-        stage('Create Kubernetes Pod') {
-            agent {
-                kubernetes {
-                    label 'jenkins-pod'  // Pod 레이블 설정
-                    yaml """
-                    apiVersion: v1
-                    kind: Pod
-                    metadata:
-                      name: jenkins-pod
-                    spec:
-                      containers:
-                        - name: jenkins-agent
-                          image: 'jenkins/inbound-agent:latest'  // Jenkins Agent 이미지 사용
-                          volumeMounts:
-                            - name: playbook-volume
-                              mountPath: /home/user1/jenkins/ansible  // playbook.yml 경로
-                            - name: report-pod-volume
-                              mountPath: /home/user1/jenkins/ansible/report_pod.yml  // report_pod.yml 경로
-                              subPath: report_pod.yml
-                      volumes:
-                        - name: playbook-volume
-                          hostPath:
-                            path: ${WORKSPACE}  // Jenkins 워크스페이스
-                            type: Directory
-                        - name: report-pod-volume
-                          hostPath:
-                            path: ${REPORT_POD_SRC}  // report_pod.yml 경로
-                            type: File
-                    """
-                }
-            }
+        stage('Deploy Report Pod') {
+            agent any  // 이 스테이지는 어떤 에이전트에서든 실행 가능
             steps {
                 script {
-                    echo "Kubernetes pod created with playbook and report_pod"
+                    // report_pod.yml을 Kubernetes 클러스터에 배포
+                    sh """
+                    kubectl apply -f ${REPORT_POD_SRC}
+                    """
                 }
             }
         }
 
         stage('Run Ansible Playbook') {
-            agent {
-                kubernetes {
-                    label 'jenkins-pod'
-                    yaml """
-                    apiVersion: v1
-                    kind: Pod
-                    metadata:
-                      name: jenkins-pod
-                    spec:
-                      containers:
-                        - name: jenkins-agent
-                          image: 'jenkins/inbound-agent:latest'  // Jenkins Agent 이미지
-                          volumeMounts:
-                            - name: playbook-volume
-                              mountPath: /home/user1/jenkins/ansible
-                            - name: report-pod-volume
-                              mountPath: /home/user1/jenkins/ansible/report_pod.yml
-                              subPath: report_pod.yml
-                      volumes:
-                        - name: playbook-volume
-                          hostPath:
-                            path: ${WORKSPACE}
-                            type: Directory
-                        - name: report-pod-volume
-                          hostPath:
-                            path: ${REPORT_POD_SRC}
-                            type: File
-                    """
-                }
-            }
+            agent any  // 이 스테이지는 어떤 에이전트에서든 실행 가능
             steps {
                 script {
-                    // Ansible Playbook을 Kubernetes Pod에서 실행
+                    // Ansible Playbook을 실행합니다.
+                    echo "Running Ansible Playbook"
                     sh """
                         ansible-playbook -i /home/user1/my_hosts ${PLAYBOOK_SRC} \
                         -e playbook_src=${PLAYBOOK_SRC} \

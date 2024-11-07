@@ -14,4 +14,4 @@ jobs:
 
       - name: Trigger Jenkins Job via ngrok URL
         run: |
-          curl -X POST "http://<ngrok-subdomain>.ngrok.io/job/report/build?token=2oW6AEqu2sm6vK9UwKrhWPDJWNA_5Mh2M6YxgcYLcRMapNdN6"
+          curl -X POST "http://ngroktest.ngrok.io/job/report/build?token=2oW6AEqu2sm6vK9UwKrhWPDJWNA_5Mh2M6YxgcYLcRMapNdN6"
