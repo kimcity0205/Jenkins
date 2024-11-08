@@ -8,6 +8,10 @@
         name: httpd
         state: present
 
+    - name: image pull
+      yum: 
+        name: 
+
     - name: Start the HTTPD service
       service:
         name: httpd
