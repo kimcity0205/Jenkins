@@ -9,8 +9,8 @@ pipeline {
     stage('docker build and push') {
       steps {
         sh '''
-        sudo docker build -t kimcity0205/report:image .
-        sudo docker push kimcity0205/report:image
+        sudo docker build -t kimcity0205/report:image1 .
+        sudo docker push kimcity0205/report:image1
         '''
       }
     }
