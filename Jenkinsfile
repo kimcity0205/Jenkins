@@ -6,6 +6,7 @@ pipeline {
         git url: 'https://github.com/kimcity0205/Jenkins.git', branch: 'main'
       }
     }
+
     stage('docker build and push') {
       steps {
         sh '''
